@@ -1,0 +1,23 @@
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Stock Graph Demo</title>
+  <style>
+    #main {
+      height: 100%
+    }
+  </style>
+</head>
+
+<body>
+  <div id="main"></div>
+  <script type="module">
+    import init from "./kline.js?ts=1"
+    const myChart = init("main", "600255", { period: "day" })
+  </script>
+</body>
+
+</html>

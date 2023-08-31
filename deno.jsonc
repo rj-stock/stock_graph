@@ -1,0 +1,25 @@
+{
+  "lock": false,
+  "tasks": {
+    "test": "deno test -A",
+    "dev": "deno run -A --watch=static/,router/,lib/,dao/ server.ts",
+    "start": "deno run --allow-net --allow-read --allow-write --allow-env server.ts",
+    // --target x86_64-unknown-linux-gnu | x86_64-pc-windows-msvc | x86_64-apple-darwin | aarch64-apple-darwin
+    "build": "deno compile --allow-net --allow-read --allow-write --allow-env -o stock_graph server.ts"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "allowJs": true
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 120,
+    "indentWidth": 2,
+    "singleQuote": false,
+    "semiColons": false,
+    "proseWrap": "preserve"
+  },
+  "lint": {
+    "exclude": ["static/*"]
+  }
+}
