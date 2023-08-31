@@ -1,0 +1,7 @@
+temp
+build
+*.lock
+*.log
+try*.*
+app*
+stock_graph*

@@ -1,0 +1,6 @@
+{
+  "recommendations": [
+    "denoland.vscode-deno",
+    "cweijan.vscode-postgresql-client2"
+  ]
+}
