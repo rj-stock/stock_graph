@@ -6,6 +6,10 @@
   <meta name="color-scheme" content="light dark">
   <title>Stock Graph Demo</title>
   <style>
+    body {
+      background-color: gray;
+    }
+
     #main {
       height: 100%
     }
@@ -15,8 +19,9 @@
 <body>
   <div id="main"></div>
   <script type="module">
-    import init from "./kline.js?ts=1"
-    const myChart = init("main", "600255", { period: "day" })
+    const { default: init } = await import(`./kline.js?ts=${Date.now()}`)
+    const chart = await init({ el: "main", code: "600255", period: "day" })
+    addEventListener("resize", () => chart.resize())
   </script>
 </body>
 
