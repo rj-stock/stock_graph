@@ -74,6 +74,7 @@ function createChartOption(stock, isDarkTheme) {
   const zhangFu = preC ? (stock.data[len - 1].c - preC) / preC * 100 : undefined
   // const up = len ? stock.data[len - 1].c >= stock.data[len - 1].o : undefined
   const delta = 0.01
+  const deltaV = 100
   const maRawData = stock.data.map(({ c }) => c)
   return {
     backgroundColor: colors.mainBg,
@@ -112,43 +113,96 @@ function createChartOption(stock, isDarkTheme) {
         return obj
       },
       extraCssText: "width: auto",
-      valueFormatter: (v) => typeof v === "number" ? v.toFixed(2) : v,
-      // {a} 系列名
-      // {b} 数据名(x轴值)
-      // {c} 数据值 `[索引号, o, c, l, h, v, a]`
-      // formatter: "{a}、{b}、{c}、{d}、{e}",
-      formatter: (params) => tooltipFormatter(params[0], stock.data),
+      // valueFormatter: (v) => typeof v === "number" ? v.toFixed(2) : v,
+      formatter: (params) => tooltipFormatter(params[0].dataIndex, stock.data),
     },
     // 坐标轴组成的矩形的控制：left,right,top,bottom,width,height
-    grid: {
-      show: true,
-      containLabel: true,
-      borderColor: colors.mainBorder,
-      borderWidth: 2,
-      top: 60,
-      bottom: 0,
-      left: "25em",
-      right: "25em",
-    },
-    xAxis: {
-      show: false,
-      // ["2017-10-24", "2017-10-25", "2017-10-26", "2017-10-27"],
-      data: stock.data.map(({ t }) => t),
-      axisLabel: {
-        formatter: (date) => `${parseInt(date.substring(5, 7))}/${parseInt(date.substring(8))}`,
-        align: "right",
+    grid: [
+      // 主图
+      {
+        show: true,
+        containLabel: false,
+        borderColor: colors.mainBorder,
+        borderWidth: 2,
+        top: "5%",
+        // bottom: 0,
+        left: 60,
+        right: 60,
+        height: "70%",
+        // width: "75%",
       },
-      // axisTick: {
-      //   alignWithLabel: true,
-      // },
-      axisPointer: {
-        label: {
-          show: true,
-          formatter: ({ value }) => `${value} ${weekCn[new Date(value).getDay()]}`,
+      // 副图：成交量
+      {
+        show: true,
+        containLabel: false,
+        borderColor: colors.mainBorder,
+        borderWidth: 2,
+        top: "80%",
+        bottom: 25,
+        left: 60,
+        right: 60,
+        // height: "20%",
+        // width: "75%",
+      },
+    ],
+    xAxis: [
+      // 主图横轴：隐藏不显示
+      {
+        show: false,
+        type: "category",
+        // ["2017-10-24", "2017-10-25", "2017-10-26", "2017-10-27"],
+        data: stock.data.map(({ t }) => t),
+        boundaryGap: true,
+        axisLine: { onZero: false },
+        axisLabel: {
+          show: true, // 这个设置很重要，否则横轴区会占用一定的高度
+          // formatter: (date) => `${parseInt(date.substring(5, 7))}/${parseInt(date.substring(8))}`,
+          align: "right",
         },
+        axisPointer: {
+          label: {
+            show: false,
+            // formatter: ({ value }) => `${value} ${weekCn[new Date(value).getDay()]}`,
+          },
+        },
+        axisTick: {
+          alignWithLabel: true,
+        },
+        splitNumber: 20,
+        min: "dataMin",
+        max: "dataMax",
       },
-    },
+      // 副图成交量横轴
+      {
+        show: true,
+        type: "category",
+        gridIndex: 1,
+        // ["2017-10-24", "2017-10-25", "2017-10-26", "2017-10-27"],
+        data: stock.data.map(({ t }) => t),
+        boundaryGap: true,
+        axisLine: { show: false, onZero: false },
+        axisLabel: {
+          show: true,
+          formatter: (date) => `${parseInt(date.substring(5, 7))}/${parseInt(date.substring(8))}`,
+          align: "right",
+        },
+        axisPointer: {
+          label: {
+            show: true,
+            formatter: ({ value }) => `${value} ${weekCn[new Date(value).getDay()]}`,
+          },
+        },
+        axisTick: {
+          show: true,
+          alignWithLabel: true,
+        },
+        splitNumber: 20,
+        min: "dataMin",
+        max: "dataMax",
+      },
+    ],
     yAxis: [
+      // 主图左 Y 轴
       {
         type: "value",
         name: `日线 ${stock.name}`,
@@ -167,10 +221,9 @@ function createChartOption(stock, isDarkTheme) {
           formatter: (value) => value.toFixed(2),
           align: "right",
         },
-        boundaryGap: false,
+        // boundaryGap: false,
         min: Math.min(...stock.data.map(({ l }) => l)) - delta,
         max: Math.max(...stock.data.map(({ h }) => h)) + delta,
-        inside: false,
         axisPointer: {
           label: {
             show: true,
@@ -178,12 +231,14 @@ function createChartOption(stock, isDarkTheme) {
           },
         },
       },
+      // 主图右 Y 轴
       {
         type: "value",
+        position: "right",
         // name: `日线 ${stock.name}`,
         // nameTextStyle: { color: colors.yAxis.name },
         scale: true, // 设为 true 不限制显示 0 轴，设置了 min、max 则无效
-        axisLine: { show: false }, // 轴线
+        axisLine: { show: false, onZero: false }, // 轴线
         axisTick: { show: false }, // 刻度
         splitLine: { show: false }, // 横向分割线
         // 刻度值
@@ -195,14 +250,78 @@ function createChartOption(stock, isDarkTheme) {
           formatter: (value) => value.toFixed(2),
           align: "left",
         },
-        boundaryGap: false,
+        // boundaryGap: false,
         min: Math.min(...stock.data.map(({ l }) => l)) - delta,
         max: Math.max(...stock.data.map(({ h }) => h)) + delta,
-        inside: true,
         axisPointer: {
           label: {
             show: true,
             precision: 2,
+          },
+        },
+      },
+      // 副图左 Y 轴
+      {
+        gridIndex: 1,
+        splitNumber: 2,
+        type: "value",
+        position: "left",
+        name: "成交量",
+        nameTextStyle: { color: colors.yAxis.name },
+        scale: true, // 设为 true 不限制显示 0 轴，设置了 min、max 则无效
+        axisLine: { show: false }, // 轴线
+        axisTick: { show: false }, // 刻度线
+        splitLine: { show: false }, // 横向分割线
+        // 刻度值
+        axisLabel: {
+          show: true,
+          showMinLabel: false,
+          showMaxLabel: false,
+          color: colors.yAxis.label,
+          formatter: (value) => (value / 100).toFixed(0),
+          align: "right",
+        },
+        boundaryGap: false,
+        splitNumber: 3,
+        max: "dataMax",
+        axisPointer: {
+          label: {
+            show: true,
+            formatter: ({ value }) => (value / 100).toFixed(0) + "万手",
+            precision: 0,
+          },
+        },
+      },
+      // 副图右 Y 轴
+      {
+        show: true, // TODO 无法将此轴移到右侧，应该是 bug
+        gridIndex: 1,
+        splitNumber: 2,
+        type: "value",
+        position: "right",
+        // name: "成交量",
+        // nameTextStyle: { color: colors.yAxis.name },
+        scale: true, // 设为 true 不限制显示 0 轴，设置了 min、max 则无效
+        axisLine: { show: false, onZero: false }, // 轴线
+        axisTick: { show: false }, // 刻度线
+        splitLine: { show: false }, // 横向分割线
+        // 刻度值
+        axisLabel: {
+          show: true,
+          showMinLabel: false,
+          showMaxLabel: false,
+          color: colors.yAxis.label,
+          formatter: (value) => (value / 100).toFixed(0),
+          align: "left",
+        },
+        boundaryGap: false,
+        splitNumber: 3,
+        max: "dataMax",
+        axisPointer: {
+          label: {
+            show: true,
+            formatter: ({ value }) => (value / 100).toFixed(0),
+            precision: 0,
           },
         },
       },
@@ -223,6 +342,7 @@ function createChartOption(stock, isDarkTheme) {
         tooltip: {
           // formatter: "{a}, {b}，{c}，{d}，{e}",
         },
+        barWidth: "60%",
       },
       {
         name: "MA5",
@@ -255,23 +375,41 @@ function createChartOption(stock, isDarkTheme) {
           color: colors.ma[20],
         },
       },
+      {
+        name: "成交量",
+        type: "bar",
+        xAxisIndex: 1,
+        yAxisIndex: 2,
+        data: stock.data.map(({ o, c, l, h, v, a }) => v / 100),
+        barWidth: "60%",
+        itemStyle: {
+          color: function (params) {
+            const k = stock.data[params.dataIndex]
+            return k.c >= k.o ? colors.k.upBorder : colors.k.downFill
+          },
+          borderWidth: 0,
+          borderColor: function (params) {
+            // bug: echarts not support functional borderColor
+            const k = stock.data[params.dataIndex]
+            return k.c >= k.o ? colors.k.upBorder : colors.k.downBorder
+          },
+        },
+      },
     ],
   }
 }
 
 const weekCn = ["", "周一", "周二", "周三", "周四", "周五", "周六", "周日"]
 
-function tooltipFormatter(param, kdata) {
-  // param is {name:string, data:[index, o, c, l, h, v, a]}
-  const { name, data: [index, o] } = param
-  const data = param.data
+function tooltipFormatter(index, kdata) {
   const curK = kdata[index]
+  // console.log(curK)
   // first K take open price, otherwise take pre close price
-  const preC = index > 0 ? kdata[index - 1].c : o
+  const preC = index > 0 ? kdata[index - 1].c : curK.o
   return `<div style="display:flex;flex-direction:column">
        <div style="display:flex">
-         <div style="text-align:left;">${name}</div>
-         <div style="text-align:right;flex-grow:1;padding-left:.5em">${weekCn[new Date(name).getDay()]}</div>
+         <div style="text-align:left;">${curK.t}</div>
+         <div style="text-align:right;flex-grow:1;padding-left:.5em">${weekCn[new Date(curK.t).getDay()]}</div>
        </div>
        <div style="display:flex">
          <div style="width:3.5em">开盘</div>
