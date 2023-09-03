@@ -64,6 +64,7 @@ function themeColors(isDarkTheme) {
         line: "#ABADB2",
         label: "#ABADB2",
       },
+      legend: "green",
     }
     : { mainBg: "#ffffff", mainBorder: "#4C2121" }
 }
@@ -83,8 +84,26 @@ function createChartOption(stock, isDarkTheme) {
   const deltaV = 100
   const maRawData = stock.data.map(({ c }) => c)
   return {
+    legend: {
+      icon: "none",
+      itemWidth: 0,
+      padding: 5,
+      data: [
+        {
+          name: "MA5",
+          lineStyle: { color: colors.ma[5], inactiveColor: colors.ma[20] },
+          textStyle: { color: colors.ma[5], inactiveColor: colors.ma[20] },
+        },
+        {
+          name: "MA20",
+          lineStyle: { color: colors.ma[20], inactiveColor: colors.ma[20] },
+          textStyle: { color: colors.ma[20], inactiveColor: colors.ma[20] },
+        },
+      ],
+      selected: { "MA5": false, "MA20": true },
+    },
     backgroundColor: colors.mainBg,
-    title: {
+    _title: {
       left: "center",
       text: stock.code + (stock.name ? ` ${stock.name}` : ""),
       subtext: zhangFu !== undefined ? `${stock.data[len - 1].c.toFixed(2)}  ${zhangFu.toFixed(2)}%` : "",
@@ -283,7 +302,7 @@ function createChartOption(stock, isDarkTheme) {
           showMinLabel: false,
           showMaxLabel: false,
           color: colors.yAxis.label,
-          formatter: (value) => (value / 100).toFixed(0),
+          formatter: (value) => (value / 10000).toFixed(0),
           align: "right",
         },
         boundaryGap: false,
@@ -292,7 +311,7 @@ function createChartOption(stock, isDarkTheme) {
         axisPointer: {
           label: {
             show: true,
-            formatter: ({ value }) => (value / 100).toFixed(0) + "万手",
+            formatter: ({ value }) => (value / 10000).toFixed(0) + "万手",
             precision: 0,
           },
         },
@@ -333,7 +352,7 @@ function createChartOption(stock, isDarkTheme) {
     ],
     series: [
       {
-        name: "日 K",
+        name: "K线",
         type: "candlestick",
         data: stock.data.map(({ o, c, l, h, v, a }) => [o, c, l, h, v, a]),
         //dimensions: ["date", "open", "close", "highest", "lowest"], // TODO
