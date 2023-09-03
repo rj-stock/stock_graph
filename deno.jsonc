@@ -21,5 +21,8 @@
   },
   "lint": {
     "exclude": ["static/*"]
+  },
+  "imports": {
+    "echarts": "https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.esm.min.js"
   }
 }

@@ -1,8 +1,8 @@
-import * as echarts from "https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.esm.min.js"
+import * as echarts from "echarts"
 import { getKData } from "./get_stock_data.js?ts=1"
 
 export default async function init({ el, code, period } = {}) {
-  const isDarkTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+  const isDarkTheme = window.isDark
   // get stock k data
   const stock = await getKData(code, period)
 
@@ -32,7 +32,13 @@ function themeColors(isDarkTheme) {
       mainBg: "#000000",
       mainBorder: "#4C2121",
       // k 线
-      k: { upFill: "transparent", upBorder: "#FF3D3D", downFill: "#10CC55", downBorder: "#10CC55", doji: "#c23531" },
+      k: {
+        upFill: "transparent",
+        upBorder: "#FF3D3D",
+        downFill: "#10CC55",
+        downBorder: "#10CC55",
+        doji: "#c23531",
+      },
       kTip: {
         bg: "rgba(0, 0, 0, 0.8)",
         border: "#144567",
@@ -98,6 +104,7 @@ function createChartOption(stock, isDarkTheme) {
     },
     tooltip: {
       trigger: "axis",
+      // triggerOn: "click",
       axisPointer: {
         type: "cross",
         crossStyle: { color: colors.cross.line, type: crossLineType, width: 1 },
@@ -106,9 +113,9 @@ function createChartOption(stock, isDarkTheme) {
       backgroundColor: colors.kTip.bg,
       borderColor: colors.kTip.border,
       position: function (pos, params, el, elRect, size) {
-        const obj = { top: 60 }
+        const obj = { top: 32 }
         // 中间分割模式
-        obj[["left", "right"][+(pos[0] < size.viewSize[0] / 2)]] = "55em"
+        obj[["left", "right"][+(pos[0] < size.viewSize[0] / 2)]] = 60
         // TODO 保持固定直到鼠标进入提示框就反向定位
         return obj
       },
@@ -125,11 +132,9 @@ function createChartOption(stock, isDarkTheme) {
         borderColor: colors.mainBorder,
         borderWidth: 2,
         top: "5%",
-        // bottom: 0,
         left: 60,
         right: 60,
-        height: "70%",
-        // width: "75%",
+        height: "75%",
       },
       // 副图：成交量
       {
@@ -141,8 +146,6 @@ function createChartOption(stock, isDarkTheme) {
         bottom: 25,
         left: 60,
         right: 60,
-        // height: "20%",
-        // width: "75%",
       },
     ],
     xAxis: [
@@ -184,7 +187,7 @@ function createChartOption(stock, isDarkTheme) {
         axisLabel: {
           show: true,
           formatter: (date) => `${parseInt(date.substring(5, 7))}/${parseInt(date.substring(8))}`,
-          align: "right",
+          align: "center",
         },
         axisPointer: {
           label: {
@@ -207,6 +210,7 @@ function createChartOption(stock, isDarkTheme) {
         type: "value",
         name: `日线 ${stock.name}`,
         nameLocation: "end",
+        nameGap: 5,
         nameTextStyle: { color: colors.yAxis.name },
         scale: true, // 设为 true 不限制显示 0 轴，设置了 min、max 则无效
         axisLine: { show: false }, // 轴线
@@ -266,7 +270,8 @@ function createChartOption(stock, isDarkTheme) {
         splitNumber: 2,
         type: "value",
         position: "left",
-        name: "成交量",
+        // name: "成交量",
+        // label: { show: false },
         nameTextStyle: { color: colors.yAxis.name },
         scale: true, // 设为 true 不限制显示 0 轴，设置了 min、max 则无效
         axisLine: { show: false }, // 轴线
@@ -378,21 +383,39 @@ function createChartOption(stock, isDarkTheme) {
       {
         name: "成交量",
         type: "bar",
+        barWidth: "60%",
         xAxisIndex: 1,
         yAxisIndex: 2,
-        data: stock.data.map(({ o, c, l, h, v, a }) => v / 100),
-        barWidth: "60%",
-        itemStyle: {
-          color: function (params) {
-            const k = stock.data[params.dataIndex]
-            return k.c >= k.o ? colors.k.upBorder : colors.k.downFill
+        data: stock.data.map(({ o, c, l, h, v, a }) => {
+          return {
+            value: v / 100,
+            itemStyle: {
+              color: c >= o ? colors.k.upFill : colors.k.downFill,
+              borderWidth: 1,
+              borderColor: c >= o ? colors.k.upBorder : colors.k.downBorder,
+            },
+          }
+        }),
+        markPoint: {
+          tooltip: { show: true },
+          animation: false,
+          silent: true,
+          symbol: "pin",
+          symbolSize: 16,
+          itemStyle: { color: "transparent" },
+          label: {
+            color: colors.yAxis.name,
+            // formatter: "{a}-{b}-{c}",
+            formatter(params) {
+              console.log(params)
+              return "成交量"
+            },
           },
-          borderWidth: 0,
-          borderColor: function (params) {
-            // bug: echarts not support functional borderColor
-            const k = stock.data[params.dataIndex]
-            return k.c >= k.o ? colors.k.upBorder : colors.k.downBorder
-          },
+          data: [{
+            // value: "成交量",
+            coord: [0, "max"],
+            symbolOffset: ["110%", "120%"],
+          }],
         },
       },
     ],
@@ -460,5 +483,7 @@ function tooltipFormatter(index, kdata) {
  */
 const ma = (n, values, fractionDigits = 2) =>
   values.map((_, i) =>
-    i < n - 1 ? "-" : (values.slice(i - n + 1, i + 1).reduce((a, b) => a + b, 0) / n).toFixed(fractionDigits)
+    i < n - 1 ? "-" : (values.slice(i - n + 1, i + 1).reduce((a, b) => a + b, 0) / n).toFixed(
+      fractionDigits,
+    )
   )

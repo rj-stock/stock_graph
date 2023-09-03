@@ -5,7 +5,26 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>Stock Graph Demo</title>
+  <script>
+    //window.isDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+    window.isDark = true;
+  </script>
+  <script type="importmap">
+    // key 不带 / 后缀为 Bare modules 定义方式
+    // key 带 / 后缀为映射路径前缀的定义方式（此时 value 也必须以 / 结尾）
+    {
+      "imports": {
+        "echarts": "https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.esm.min.js",
+        "test": "https://example.com/test.js"
+      }
+    }
+  </script>
   <style>
+    html {
+      color: #fff;
+      background-color: #000;
+    }
+
     body {
       background-color: gray;
     }
@@ -16,12 +35,15 @@
   </style>
 </head>
 
-<body>
+<body class="dark">
   <div id="main"></div>
   <script type="module">
     const { default: init } = await import(`./kline.js?ts=${Date.now()}`)
     const chart = await init({ el: "main", code: "600255", period: "day" })
     addEventListener("resize", () => chart.resize())
+
+    // const res = await fetch("http://d.10jqka.com.cn/v6/line/hs_600000/00/last3600.js")
+    // console.log(await res.text())
   </script>
 </body>
 
